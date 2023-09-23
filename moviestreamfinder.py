@@ -2,6 +2,7 @@ import streamlit as st
 from imdb import IMDb
 import pandas as pd
 from tqdm import tqdm  # Import tqdm for the progress bar
+from bs4 import BeautifulSoup
 import requests
 
 # Streamlit App Title
@@ -58,30 +59,31 @@ def generate_vidsrc_url(imdb_id=None, tmdb_id=None):
 
 # Function to get the title from a URL, using IMDb ID or TMDb ID as fallback
 def get_title_from_url(vidsrc_url, imdb_id, tmdb_id):
-    # Extract IMDb or TMDb ID from vidsrc URL
-    if "tt" in vidsrc_url:
-        imdb_id = vidsrc_url.split("tt")[-1]
-    elif "tmdb" in vidsrc_url:
-        tmdb_id = vidsrc_url.split("tmdb=")[-1]
+    try:
+        if "tt" in vidsrc_url:
+            imdb_id = vidsrc_url.split("tt")[-1]
+        elif "tmdb" in vidsrc_url:
+            tmdb_id = vidsrc_url.split("tmdb=")[-1]
 
-    # Use IMDb or TMDb ID to fetch the title
-    if imdb_id:
-        ia = IMDb()
-        movie = ia.get_movie(imdb_id)
-        return movie.get("title")
-    elif tmdb_id:
-        tmdb_api_key = "b0abe1120c53c9731ee3d32b81dd7df5"
-        base_url = f"https://api.themoviedb.org/3/movie/{tmdb_id}"
+        if imdb_id:
+            ia = IMDb()
+            movie = ia.get_movie(imdb_id)
+            return movie.get("title")
+        elif tmdb_id:
+            tmdb_api_key = "b0abe1120c53c9731ee3d32b81dd7df5"
+            base_url = f"https://api.themoviedb.org/3/movie/{tmdb_id}"
 
-        params = {
-            "api_key": tmdb_api_key,
-        }
+            params = {
+                "api_key": tmdb_api_key,
+            }
 
-        response = requests.get(base_url, params=params)
+            response = requests.get(base_url, params=params)
 
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("original_title")
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("original_title")
+    except Exception as e:
+        st.warning(f"Error processing movie: {e}")
     return None
 
 # Main content
@@ -106,14 +108,15 @@ if uploaded_file is not None:
             # Get the title using IMDb ID or TMDb ID as fallback
             vidsrc_title = get_title_from_url(vidsrc_url, None, tmdb_id)
 
-            results.append({
-                'Movie Name': movie_name,
-                'Release Year': release_year,
-                'IMDb': imdb_url,
-                'TMDb ID': tmdb_id,
-                'vidsrc': vidsrc_url,
-                'vidsrc_title': vidsrc_title
-            })
+            if vidsrc_title is not None:
+                results.append({
+                    'Movie Name': movie_name,
+                    'Release Year': release_year,
+                    'IMDb': imdb_url,
+                    'TMDb ID': tmdb_id,
+                    'vidsrc': vidsrc_url,
+                    'vidsrc_title': vidsrc_title
+                })
 
             # Update the progress bar
             pbar.update(1)

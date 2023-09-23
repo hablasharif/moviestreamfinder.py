@@ -2,6 +2,7 @@ import streamlit as st
 from imdb import IMDb
 import pandas as pd
 from tqdm import tqdm  # Import tqdm for the progress bar
+import requests
 
 # Streamlit App Title
 st.title("Movie Search App")

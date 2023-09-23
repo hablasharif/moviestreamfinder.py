@@ -1,0 +1,6 @@
+IMDbPY
+requests
+pandas
+tqdm
+openpyxl
+BeautifulSoup4

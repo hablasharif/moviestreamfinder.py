@@ -56,30 +56,16 @@ def generate_vidsrc_url(imdb_id=None, tmdb_id=None):
     else:
         return None
 
-# Function to generate vidsrc URL with IMDb ID
-def generate_vidsrc_url_with_imdb_id(imdb_id):
-    if imdb_id:
-        return f"https://vidsrc.to/embed/movie/tt{imdb_id}"
-    else:
-        return None
-
-# Function to get the movie title from a vidsrc URL
-def get_vidsrc_title(vidsrc_url):
-    if vidsrc_url:
-        response = requests.get(vidsrc_url)
+# Function to get the movie title from a URL
+def get_url_title(url):
+    if url:
+        response = requests.get(url)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
             title_tag = soup.find('title')
             if title_tag:
                 return title_tag.text.strip()
     return None
-
-# Function to generate IMDb hyperlink
-def generate_imdb_hyperlink(imdb_id):
-    if imdb_id:
-        return f"[https://www.imdb.com/title/tt{imdb_id}](https://www.imdb.com/title/tt{imdb_id})"
-    else:
-        return None
 
 # Main content
 if uploaded_file is not None:
@@ -98,22 +84,19 @@ if uploaded_file is not None:
             tmdb_id = search_movie_tmdb(movie_name, release_year)
             
             vidsrc_url = generate_vidsrc_url(imdb_id, tmdb_id)
-            imdb_hyperlink = generate_imdb_hyperlink(imdb_id)
             
-            # Generate the vidsrc URL with IMDb ID
-            vidsrc_url_with_imdb_id = generate_vidsrc_url_with_imdb_id(imdb_id)
+            # URL to check
+            url_to_check = "https://embed.smashystream.com/playere.php?tmdb=tt8080204"  # Change this URL
             
-            # Get the vidsrc title
-            vidsrc_title = get_vidsrc_title(vidsrc_url)
+            # Get titles for both URLs
+            url_title = get_url_title(url_to_check)
+            vidsrc_title = get_url_title(vidsrc_url)
 
             results.append({
                 'Movie Name': movie_name,
                 'Release Year': release_year,
-                'IMDb': imdb_hyperlink,
-                'TMDb ID': tmdb_id,
-                'vidsrc': vidsrc_url,
-                'vidsrc_title': vidsrc_title,
-                'vidsrc_with_imdb_id': vidsrc_url_with_imdb_id  # Add the IMDb ID in vidsrc URL
+                'URL Title': url_title,  # Title of the URL to check
+                'vidsrc Title': vidsrc_title,  # Title of the vidsrc URL
             })
 
             # Update the progress bar

@@ -60,6 +60,9 @@ def generate_vidsrc_url(imdb_url=None, tmdb_id=None):
 
 # Function to get the title from a URL, using IMDb ID or TMDb ID as fallback
 def get_title_from_url(url, imdb_id, tmdb_id):
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = "http://" + url  # Prepend "http://" if scheme is missing
+
     response = requests.get(url)
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')

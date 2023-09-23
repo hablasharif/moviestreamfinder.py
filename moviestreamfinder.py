@@ -1,9 +1,7 @@
 import streamlit as st
 from imdb import IMDb
-import requests
 import pandas as pd
 from tqdm import tqdm  # Import tqdm for the progress bar
-from bs4 import BeautifulSoup
 
 # Streamlit App Title
 st.title("Movie Search App")
@@ -24,9 +22,9 @@ def search_movie_imdb(movie_name, release_year):
         movie = filtered_movies[0]  # Get the first matching movie
         imdb_id = movie.getID()
         imdb_url = f"https://www.imdb.com/title/tt{imdb_id}"
-        return imdb_url, imdb_id
+        return imdb_url
     else:
-        return None, None
+        return None
 
 # Function to search for a movie and get TMDb ID
 def search_movie_tmdb(movie_name, release_year):
@@ -49,9 +47,8 @@ def search_movie_tmdb(movie_name, release_year):
     return None
 
 # Function to generate vidsrc URL with "tt" prefix
-def generate_vidsrc_url(imdb_url=None, tmdb_id=None):
-    if imdb_url:
-        imdb_id = imdb_url.split("/")[-1]  # Extract IMDb ID from IMDb URL
+def generate_vidsrc_url(imdb_id=None, tmdb_id=None):
+    if imdb_id:
         return f"https://vidsrc.to/embed/movie/tt{imdb_id}"
     elif tmdb_id:
         return f"https://vidsrc.to/embed/movie/{tmdb_id}"
@@ -59,18 +56,15 @@ def generate_vidsrc_url(imdb_url=None, tmdb_id=None):
         return None
 
 # Function to get the title from a URL, using IMDb ID or TMDb ID as fallback
-def get_title_from_url(url, imdb_id, tmdb_id):
-    if not url.startswith("http://") and not url.startswith("https://"):
-        url = "http://" + url  # Prepend "http://" if scheme is missing
+def get_title_from_url(vidsrc_url, imdb_id, tmdb_id):
+    # Extract IMDb or TMDb ID from vidsrc URL
+    if "tt" in vidsrc_url:
+        imdb_id = vidsrc_url.split("tt")[-1]
+    elif "tmdb" in vidsrc_url:
+        tmdb_id = vidsrc_url.split("tmdb=")[-1]
 
-    response = requests.get(url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        title_tag = soup.find('title')
-        if title_tag:
-            return title_tag.text.strip().split('|')[0].strip()
-    # If title not found, fall back to IMDb or TMDb title
-    elif imdb_id:
+    # Use IMDb or TMDb ID to fetch the title
+    if imdb_id:
         ia = IMDb()
         movie = ia.get_movie(imdb_id)
         return movie.get("title")
@@ -102,14 +96,14 @@ if uploaded_file is not None:
             movie_name = row['Movie Name']
             release_year = row['Release Year']
 
-            imdb_url, imdb_id = search_movie_imdb(movie_name, release_year)
+            imdb_url = search_movie_imdb(movie_name, release_year)
             tmdb_id = search_movie_tmdb(movie_name, release_year)
 
             # Generate the vidsrc URL
             vidsrc_url = generate_vidsrc_url(imdb_url, tmdb_id)
             
-            # Get the title using vidsrc URL, IMDb ID, or TMDb ID as fallback
-            vidsrc_title = get_title_from_url(vidsrc_url, imdb_id, tmdb_id)
+            # Get the title using IMDb ID or TMDb ID as fallback
+            vidsrc_title = get_title_from_url(vidsrc_url, None, tmdb_id)
 
             results.append({
                 'Movie Name': movie_name,
